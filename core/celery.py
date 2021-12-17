@@ -19,6 +19,10 @@ app.conf.beat_schedule = {
         "task": "cars.tasks.check",
         "schedule": crontab()
     },
+    'parse_cars':{
+        "task":"cars.tasks.up",
+        "schedule": crontab(minute=0, hour=0)
+    }
 }
 
 @app.task(bind=True)

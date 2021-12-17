@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'cars',
     
     # packeges
+    'rest_framework',
     'django_celery_beat',
     'django_celery_results',
 ]

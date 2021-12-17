@@ -112,16 +112,28 @@ def parse_cars(list_of_pages:list):
             find = decode_string.split()[0]
             
             t = find + '(\s\w+)*-'
+            # try:
             result =re.search(t,categories_str)[0][:-1]
+                # print(result)
+            # except Exception:
+                # print(t)
+                # continue
 
             brand = CarBrand.objects.filter(brand_name=result)[0].brand_name
             print(brand)
+            Car.objects.filter(full_name=full_name,
+                                    price=price,
+                                    brand=brand,
+                                    breed=breed,
+                                    mileage=mileage,
+                                    url=url).exists()
             if  Car.objects.filter(full_name=full_name,
                                     price=price,
                                     brand=brand,
                                     breed=breed,
                                     mileage=mileage,
                                     url=url).exists():
+                print(full_name,price,brand,breed,mileage,url)
                 continue
             list_of_results.append(Car(full_name=full_name,
                                         price=price,
@@ -129,9 +141,9 @@ def parse_cars(list_of_pages:list):
                                         breed=breed,
                                         mileage=mileage,
                                         url=url))
-                
+        print(list_of_results)
         Car.objects.bulk_create(list_of_results)
-
+        
         # print(categories_str)
             # if decode_string.split()[0] in categories_first_word:
             #     # print(CarBrand.objects.get(name=))
@@ -217,7 +229,6 @@ def parse_category(type=None):
         a = [x[0] for x in a]
         return a
 
-parse_category()
 from cars.parse import parse_cars
 parse_cars(['https://cars.kg/offers/','https://cars.kg/offers/2'])
 
