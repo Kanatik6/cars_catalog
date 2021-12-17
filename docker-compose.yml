@@ -1,0 +1,33 @@
+version: "3"
+
+
+services:
+
+  app:
+    build:
+      context: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    command: >
+      sh -c "python3 manage.py makemigrations &&
+              python3 manage.py migrate &&
+              python3 manage.py runserver 0.0.0.0:8000"
+
+  redis:
+    container_name: redis_container_final
+    image: redis
+
+  celery: 
+    build:
+      context: .
+    container_name: celery-worker-final
+    restart: always
+    command: sh -c "celery -A core worker -B -l INFO"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - app
+
