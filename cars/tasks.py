@@ -6,7 +6,6 @@ import sys
 import re
 
 from .models import Car, CarBrand
-from .parse import up
 
 
 @shared_task
@@ -32,9 +31,8 @@ def normalize_str(str: str) -> str:
 
     return ''.join(list_)
 
-# принимает soup атрибута, нормализует ее и возаращает название и значение в форматах str
+# принимает soup атрибута, нормализует ее и возаращает название и значение в форматe str
 def normalize_attr(attr_soup: BS) :
-
         """
         Returns parsed request data
         """
@@ -64,7 +62,6 @@ def get_list_url(request_url: str):
         print(url)
     return returned_list
         
-    
 
 # принимает url пользователя и запускает все программы
 @shared_task
@@ -92,7 +89,7 @@ def parse_cars(list_of_pages:list):
         for car in cars:
             name = car.find('span',class_='catalog-item-params').find('span',class_='catalog-item-caption').get_text(strip=True)
             price= car.find('span',class_='catalog-item-params').find('span',class_='catalog-item-price').get_text(strip=True)
-            
+            price = re.sub('\D','',price)
             full_name = ' '.join(name.split(' ')[:-1])
             # print( ' '.join(name.split(' ')))
             name = full_name
@@ -115,35 +112,52 @@ def parse_cars(list_of_pages:list):
                 breed = str(name.pop(index))
                 name.pop(index)
                 name = ' '.join(name)
-                 
+                
+            first_word = ''.join(name.split()[0])
+            name = ' '.join(name.split()[1:])
+            
             encoded_string = name.encode("ascii", "ignore")
             decode_string = encoded_string.decode()
+            decode_string = first_word+' '+decode_string
+            
             if '[]' in decode_string:
                 decode_string = decode_string.replace('[]','')
             find = decode_string.split()[0]
             
             t = find + '(\s\w+)*-'
-            result =re.search(t,categories_str)[0][:-1]
-
-            brand = CarBrand.objects.filter(brand_name=result)[0].brand_name
-            print(brand)
+            try:
+                result =re.search(t,categories_str)[0][:-1]
+            except Exception:
+                if find == "ВАЗ":
+                    if "ВАЗ (Lada)" in categories_str:
+                        result = 'ВАЗ (Lada)'
+                    else:
+                        print(find)
+                        continue
+                else:
+                    print(find)
+                    continue
+                    
+            print(find)
+            print(result)
+            # brand = CarBrand.objects.filter(brand_name=result)[0].brand_name
             if  Car.objects.filter(full_name=full_name,
                                     price=price,
-                                    brand=brand,
+                                    brand=find,
                                     breed=breed,
                                     mileage=mileage,
                                     url=url).exists():
                 continue
+            # создает модель хотя не должен изза этого падает bulk_create
             list_of_results.append(Car(full_name=full_name,
                                         price=price,
-                                        brand=brand,
+                                        brand=find,
                                         breed=breed,
                                         mileage=mileage,
                                         url=url))
-                
-        Car.objects.bulk_create(list_of_results)
-
-            
+        print('-',list_of_results)
+    Car.objects.bulk_create(list_of_results)
+    return categories_str                
             # soup = get_soup(url)
             # table = soup.findAll('div',class_='catalog-card-chars')
             # for item in table:
@@ -216,8 +230,10 @@ def parse_category(type=None):
         a = [x[0] for x in a]
         return a
 
-from cars.parse import parse_cars
-parse_cars(['https://cars.kg/offers/','https://cars.kg/offers/2'])
+# from cars.tasks import parse_cars
+# parse_cars(['https://cars.kg/offers/','https://cars.kg/offers/2'])
 
 
 
+if __name__ == "__main__":
+    print('=')

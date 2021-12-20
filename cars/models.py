@@ -1,23 +1,19 @@
 from django.db import models
 
 
-# todo сделать добавить поколения пробег 
 class Car(models.Model):
-    full_name = models.CharField(max_length=20)
-    price = models.CharField(max_length=20)
+    full_name = models.CharField(max_length=20,default="Не указано")
+    price = models.DecimalField(max_digits=15,decimal_places=1,default=0)
     mileage = models.CharField(max_length=20,default='Не указано')
     breed = models.CharField(max_length=20,default='Не указано')
     url = models.URLField(max_length=100)
+    brand = models.CharField(max_length=30)
 
+    def __str__(self):
+        return self.full_name
 
-
-
-
-
-
-
-
-
+# cars = Car.objects.all().order_by('price')
+# fin_cars = []
 
 
 
