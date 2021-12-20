@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'django_celery_beat',
     'django_celery_results',
     'django_filters',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -152,3 +153,10 @@ CELERY_RESULT_BACKEND = 'django-db'
 # # celery beat
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
+}
