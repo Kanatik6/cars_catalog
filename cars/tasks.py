@@ -76,7 +76,6 @@ def up(url):
 def parse_cars(list_of_pages:list):
     
     list_of_results = list()
-    counter = 0
     
     for list_ in list_of_pages:
         
@@ -91,15 +90,12 @@ def parse_cars(list_of_pages:list):
             price= car.find('span',class_='catalog-item-params').find('span',class_='catalog-item-price').get_text(strip=True)
             price = re.sub('\D','',price)
             full_name = ' '.join(name.split(' ')[:-1])
-            # print( ' '.join(name.split(' ')))
+
             name = full_name
             url = 'https://cars.kg'+car.get('href')
             breed = 'Не указано'
             mileage = 'Не указано'
             
-            # print('-'*10,counter+1,'-'*10)
-            # print(name)
-
             if 'км' in name:
                 name = name.split()
                 index =  name.index('км') -1
@@ -140,7 +136,7 @@ def parse_cars(list_of_pages:list):
                     
             print(find)
             print(result)
-            # brand = CarBrand.objects.filter(brand_name=result)[0].brand_name
+
             if  Car.objects.filter(full_name=full_name,
                                     price=price,
                                     brand=find,
@@ -148,7 +144,7 @@ def parse_cars(list_of_pages:list):
                                     mileage=mileage,
                                     url=url).exists():
                 continue
-            # создает модель хотя не должен изза этого падает bulk_create
+
             list_of_results.append(Car(full_name=full_name,
                                         price=price,
                                         brand=find,
