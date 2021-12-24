@@ -1,18 +1,13 @@
 from bs4 import BeautifulSoup as B
-import requests
-import re
-import sys
 from decimal import Decimal as D
+import requests
+import sys
+import re
 
 from .models import CarBrand,Car
-
-# from cars.tasks import normalize_str
+from .utils import normalize_str, get_soup
 
 def parse_category(type=None):
-    
-    '''Эта функция должна парсить категории,не передаваться в таск и единственный раз активироваться, чтобы заполнить базу,
-    а дальше будет работать только в случае если модель не находит ее в базе, даже после второго поиска, и если после
-    повторного поиска не находит, то передает в mail и уже там я все узнаю     '''
     
     url = 'https://cars.kg/offers'
     response = requests.get(url)
@@ -21,33 +16,31 @@ def parse_category(type=None):
         sys.exit()
     soup = B(response.content,'html.parser')
     marks = soup.find_all('select',attrs={'class':'select','name':'vendor','id':'m_search_vendor'})[0].get_text()
-    # тут все марки со всеми словами
     marks = marks.replace('\xa0','').split('\n')[2:-1]
     
-    if type=='qwe':
+    if type=='for_find':
         a = CarBrand.objects.values_list('brand_name')
         a = [x[0] for x in a]
         return a
 
-def normalize_str(str: str) -> str:
-    space = True
-    list_delete = list()
-    list_ = list(str.strip().replace(' ','_').replace('-',' '))
-    for index,letter in enumerate(list_):
-        if space == True and letter == '_':
-            list_delete.append(index)
-        elif space == True and letter !='_':
-            space = False
-        elif letter == '_':
-            space = True
-    list_delete = [list_.pop(value)for value in reversed(list_delete)]
+# def normalize_str(str):
+#     space = True
+#     list_delete = list()
+#     list_ = list(str.strip().replace(' ','_').replace('-',' '))
+#     for index,letter in enumerate(list_):
+#         if space == True and letter == '_':
+#             list_delete.append(index)
+#         elif space == True and letter !='_':
+#             space = False
+#         elif letter == '_':
+#             space = True
+#     list_delete = [list_.pop(value)for value in reversed(list_delete)]
 
-    return ''.join(list_)
+#     return ''.join(list_)
 
-
-def find_car_urls(pages:int):
+def find_car_urls():
     list_of_car_urls = list()
-    list_of_pages = [f'https://www.mashina.kg/search/all/?page={x}' for x in range(1,pages)]
+    list_of_pages = [f'https://www.mashina.kg/search/all/?page={x}' for x in range(1,20)]
     print(list_of_pages)
     for url in list_of_pages:
         response = requests.get(url)
@@ -81,16 +74,15 @@ def parse_car(list_of_car_url:list):
         full_name = soup.find('div',class_='head-left clr').find('h1').get_text().replace('Продажа ','')
         price = soup.find('div',class_='price-types').get_text()
         
-        # from cars.parse_mashina_kg import find_car_urls, parse_car
-        # lists = find_car_urls(5)
         price = D(int(price.split('\n')[1].replace('$','').replace(' ','')))
         print(price)
         url = i
-        mileage = attrs_dict.get('Пробег',not_found)
+        mileage = attrs_dict.get('Пробег',0)
+        mileage = int(float(re.sub('\D','',str(mileage))))
         year = int(attrs_dict.get('Год_выпуска',0))
         print(i)
         
-        categories_str = '-'.join(parse_category(type='qwe'))
+        categories_str = '-'.join(parse_category(type='for_find'))
         find = full_name.split()[0]
         t = find + '(\s\w+)*-'
         try:
@@ -108,18 +100,7 @@ def parse_car(list_of_car_url:list):
                            url=url,
                            brand=brand)
         
-        break
-
-
-def last_page():
-    url = 'https://www.mashina.kg/search/all/'
-    response = requests.get(url)
-    soup = B(response.content,'html.parser')
-    a = soup.find('ul',class_='pagination')
-    page_last = a.findAll('a')[-1].get('href')
-    print('https://www.mashina.kg'+page_last)
-
-
-
-# TODO сделать так чтобы он парсил вообще все правильно, и проверить работает ли он полноценно уже через гугл
-# TODO сделать фильтр по бренду 
+def up():
+    list_of_urls = find_car_urls()
+    parse_car(list_of_urls)
+    
