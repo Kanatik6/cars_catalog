@@ -95,8 +95,10 @@ def parse_cars(list_of_pages:list):
             url = 'https://cars.kg'+car.get('href')
             mileage = 'Не указано'
             print(url)
-            year = list(soup.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars'))[1]
-            year = int(re.sub('\D','',year))
+            # soup.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars')
+            soup_ = get_soup(url)
+            year = list(soup_.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars'))[1]
+            year = int(re.sub('\D','',year.get_text()))
             if 'км' in name:
                 name = name.split()
                 index =  name.index('км') -1
@@ -135,12 +137,12 @@ def parse_cars(list_of_pages:list):
                     print(find)
                     continue
                     
-            print(find)
-            print(result)
-
+            brand =CarBrand.objects.get(brand_name=result)
+            # print(result)
+            print(full_name,price,find,year,mileage,url)
             if  Car.objects.filter(full_name=full_name,
                                     price=price,
-                                    brand=find,
+                                    brand=brand,
                                     year=year,
                                     mileage=mileage,
                                     url=url).exists():
@@ -148,7 +150,7 @@ def parse_cars(list_of_pages:list):
 
             list_of_results.append(Car(full_name=full_name,
                                         price=price,
-                                        brand=find,
+                                        brand=brand,
                                         year=year,
                                         mileage=mileage,
                                         url=url))
@@ -193,3 +195,7 @@ import requests
 response = requests.get('https://cars.kg/offers/1119080.html')
 soup = BS(response.content,'html.parser')
 table = soup.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars')
+
+
+from cars.tasks import parse_cars
+parse_cars(['https://cars.kg/offers/','https://cars.kg/offers/2'])
