@@ -17,11 +17,11 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     "check_celery": {
         "task": "cars.tasks.check",
-        "schedule": crontab()
+        "schedule": crontab(hour=1,minute=0)
     },
     'parse_cars':{
-        "task":"cars.tasks.up",
-        "schedule": crontab(hour=0,minute=0)
+        "task":"cars.tasks.up_all",
+        "schedule": crontab(hour=3,minute=24)
     }
 }
 
