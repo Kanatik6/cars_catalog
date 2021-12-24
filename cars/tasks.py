@@ -90,22 +90,23 @@ def parse_cars(list_of_pages:list):
             price= car.find('span',class_='catalog-item-params').find('span',class_='catalog-item-price').get_text(strip=True)
             price = re.sub('\D','',price)
             full_name = ' '.join(name.split(' ')[:-1])
-
+            
             name = full_name
             url = 'https://cars.kg'+car.get('href')
-            breed = 'Не указано'
             mileage = 'Не указано'
-            
+            print(url)
+            year = list(soup.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars'))[1]
+            year = int(re.sub('\D','',year))
             if 'км' in name:
                 name = name.split()
                 index =  name.index('км') -1
                 mileage = str(name.pop(index))
                 name.pop(index)
                 name = ' '.join(name)
+            # todo поменять на год
             if 'поколение' in name:
                 name = name.split()
                 index =  name.index('поколение') -1
-                breed = str(name.pop(index))
                 name.pop(index)
                 name = ' '.join(name)
                 
@@ -140,7 +141,7 @@ def parse_cars(list_of_pages:list):
             if  Car.objects.filter(full_name=full_name,
                                     price=price,
                                     brand=find,
-                                    breed=breed,
+                                    year=year,
                                     mileage=mileage,
                                     url=url).exists():
                 continue
@@ -148,55 +149,12 @@ def parse_cars(list_of_pages:list):
             list_of_results.append(Car(full_name=full_name,
                                         price=price,
                                         brand=find,
-                                        breed=breed,
+                                        year=year,
                                         mileage=mileage,
                                         url=url))
         print('-',list_of_results)
     Car.objects.bulk_create(list_of_results)
-    return categories_str                
-            # soup = get_soup(url)
-            # table = soup.findAll('div',class_='catalog-card-chars')
-            # for item in table:
-            #     list_of_attributes = item.findAll('dl',class_='chars-item')
-            #     dict_of_result_one = {'name':name,
-            #                           'price':price,
-            #                           'url':url}
-                
-            #     for value in list_of_attributes:
-            #         key,value_ = normalize_attr(value)
-            #         dict_of_result_one[key] = value_
-            #     counter +=1
-                
-                
-            #     not_indicated = 'Не задано'
-            #     Car(name = dict_of_result_one.get('name',default=not_indicated),
-            #         price=dict_of_result_one.get('price',default=not_indicated),
-            #         url = dict_of_result_one.get('url',default=not_indicated),
-            #         year =dict_of_result_one.get('Год_выпуска',default=not_indicated),
-            #         whell =dict_of_result_one.get('whell',default=not_indicated),
-            #         mileage =dict_of_result_one.get('Пробег',default=not_indicated),
-            #         type =dict_of_result_one.get('type',default=not_indicated),
-            #         fuel_type =dict_of_result_one.get('fuel_type',default=not_indicated),
-            #         box_type =dict_of_result_one.get('box_type',default=not_indicated),
-            #         drive_unit =dict_of_result_one.get('drive_unit',default=not_indicated),
-            #         color =dict_of_result_one.get('color',default=not_indicated),
-            #         power = dict_of_result_one.get('Мощность',default=not_indicated),
-            #         volume = dict_of_result_one.get('Обьем',default=not_indicated),
-            #     )
-            #     if Car.objects.filter(name = dict_of_result_one.get('name',default=not_indicated),
-            #                              price = dict_of_result_one.get('price',default=not_indicated),
-            #                              url = dict_of_result_one.get('url',default=not_indicated),
-            #                              year = dict_of_result_one.get('year'),default=not_indicated,
-            #                              whell = dict_of_result_one.get('whell',default=not_indicated),
-            #                              mileage = dict_of_result_one.get('mileage',default=not_indicated),
-            #                              type = dict_of_result_one.get('type',default=not_indicated),
-            #                              fuel_type = dict_of_result_one.get('fuel_type',default=not_indicated),
-            #                              box_type = dict_of_result_one.get('box_type',default=not_indicated),
-            #                              drive_unit = dict_of_result_one.get('drive_unit',default=not_indicated),
-            #                              color = dict_of_result_one.get('color',default=not_indicated),
-            #                              power = dict_of_result_one.get('power',default=not_indicated),
-            #                              volume = dict_of_result_one.get('volume',default=not_indicated),
-            #                              ).exists():
+    return categories_str        
             
 def parse_category(type=None):
     
@@ -217,10 +175,6 @@ def parse_category(type=None):
     if type == None:
         {index:CarBrand.objects.get_or_create(brand_name=mark.strip()) for index,mark in enumerate(marks)}
         return {'Success':True}
-    elif type == 'for_find':
-        # марки для поиска, по одному слову
-        first_word_marks = [x.strip().split()[0] for x in marks]
-        return first_word_marks
     elif type=='qwe':
         a = CarBrand.objects.values_list('brand_name')
         a = [x[0] for x in a]
@@ -233,3 +187,9 @@ def parse_category(type=None):
 
 if __name__ == "__main__":
     print('=')
+
+from bs4 import BeautifulSoup as BS
+import requests
+response = requests.get('https://cars.kg/offers/1119080.html')
+soup = BS(response.content,'html.parser')
+table = soup.find('div',class_='col-left catalog-card-params').find('div',class_='catalog-card-chars')
