@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from .models import  Car, CarBrand 
 from .serializer import BrandSerializer, CarSerializer
-from .filters import CarFilter
+from .filters import CarFilter, PageNumberPagination
 
 
     
@@ -25,7 +25,10 @@ class CarListView(mixins.ListModelMixin, GenericViewSet):
     filterset_class = CarFilter
     filter_fields = ['full_name', ]
     search_fields = ['full_name', ]
-    
+    pagination_class = PageNumberPagination
+    def get_queryset(self):
+        return_qs = self.queryset.order_by('id')
+        return super().get_queryset()
     
 class CarDetailView(mixins.RetrieveModelMixin,GenericViewSet):
     queryset = Car.objects.all()
@@ -36,6 +39,7 @@ class BrandListView(mixins.ListModelMixin,GenericViewSet):
     queryset = CarBrand.objects.all()
     serializer_class = BrandSerializer
     permission_classes = [AllowAny,]
+    pagination_class = PageNumberPagination
     
     def get_queryset(self):
         return_qs = self.queryset.order_by('brand_name')
