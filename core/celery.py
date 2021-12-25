@@ -21,7 +21,7 @@ app.conf.beat_schedule = {
     },
     'parse_cars':{
         "task":"cars.tasks.up_all",
-        "schedule": crontab(hour=3,minute=24)
+        "schedule": crontab(hour=0,minute=0)
     }
 }
 
