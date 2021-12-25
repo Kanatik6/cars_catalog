@@ -1,5 +1,8 @@
 from django_filters import rest_framework as django_filters
+from rest_framework.pagination import PageNumberPagination
+
 from .models import CarBrand, Car
+
 
 class CarBrandFilter(django_filters.FilterSet):
     brand_name = django_filters.CharFilter(filed_name='brand_name',lookup_expr='')
@@ -17,3 +20,16 @@ class CarFilter(django_filters.FilterSet):
     class Meta:
         model = Car
         fields = ['brand','mileage']
+
+
+# pagination
+
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
